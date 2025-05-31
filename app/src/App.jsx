@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Excalidraw } from "@excalidraw/excalidraw";
+import '@excalidraw/excalidraw/index.css';
+import './App.css';
+import { useState, useEffect, useRef } from "react";
+import { data } from "./data/api/data";
+import { UIOptions } from "./constants/constants";
+
+const STORAGE_KEY = "excalidraw-data";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [initialData, setInitialData] = useState(null);
+  const excalidrawRef = useRef(null);
+
+useEffect(() => {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    try {
+      const parsed = JSON.parse(savedData);
+      if (parsed.appState && parsed.appState.collaborators) {
+        parsed.appState.collaborators = new Map(Object.entries(parsed.appState.collaborators));
+      }
+      setInitialData(parsed);
+    } catch (e) {
+      console.error("Invalid saved data. Using fallback.");
+      setInitialData(data[0]);
+    }
+  } else {
+    setInitialData(data[0]);
+  }
+}, []); // ✅ Runs only once on mount
+
+const handleChange = (elements, appState) => {
+  // Convert collaborators Map to plain object before saving
+  const collaborators = appState.collaborators instanceof Map
+    ? Object.fromEntries(appState.collaborators)
+    : {};
+
+  const updatedData = {
+    elements,
+    appState: {
+      ...appState,
+      collaborators,
+    },
+    scrollToContent: true,
+  };
+
+  console.log("Updated Drawing Data:", updatedData);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+};
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ height: "100vh" }} className="custom-styles">
+      {initialData && (
+        <Excalidraw
+          ref={excalidrawRef}
+          initialData={initialData}
+          onChange={handleChange}
+          UIOptions={UIOptions}
+        />
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
