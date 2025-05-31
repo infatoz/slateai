@@ -12,17 +12,19 @@ import EditProfile from "./profile/EditProfile";
 import Profile from "./profile/Profile";
 import { Toaster } from "react-hot-toast";
 import ForgotPassword from "./pages/ForgotPassword";
+import HomePage from "./pages/HomePage";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
+        <Route path="/" element ={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
-          path="/"
+          path="/slateai"
           element={
             <ProtectedRoute>
               <App />

@@ -3,10 +3,13 @@ import * as Yup from "yup";
 import { loginUser } from "../auth/auth";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast"; // ✅ Import toast
-
+import { Navigate } from "react-router-dom";
+import { isAuthenticated } from "../auth/auth";
 export default function Login() {
   const navigate = useNavigate();
-
+  if (isAuthenticated()) {
+    return <Navigate to="/slateai" />;
+  }
   const initialValues = {
     email: "",
     password: "",
@@ -24,7 +27,7 @@ export default function Login() {
   const handleSubmit = (values) => {
     loginUser({ email: values.email });
     toast.success("Login successful ✅"); // ✅ Show toast
-    navigate("/");
+    navigate("/slateai");
   };
 
   return (
