@@ -1,0 +1,27 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "SlateAI Backend Server",
+  "keywords": [
+    "SlateAI"
+  ],
+  "homepage": "https://github.com/infatoz/slateai#readme",
+  "bugs": {
+    "url": "https://github.com/infatoz/slateai/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/infatoz/slateai.git"
+  },
+  "license": "MIT",
+  "author": "Manjunatha Devadiga, Ajith Kumar",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
