@@ -3,10 +3,13 @@ import * as Yup from "yup";
 import { loginUser } from "../auth/auth";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-
+import { Navigate } from "react-router-dom";
+import { isAuthenticated } from "../auth/auth";
 export default function Register() {
   const navigate = useNavigate();
-
+  if (isAuthenticated()) {
+    return <Navigate to="/slateai" />;
+  }
   const initialValues = {
     fullName: "",
     email: "",
@@ -37,7 +40,7 @@ export default function Register() {
     loginUser(values); // Save user data (replace with your backend logic)
     toast.success(`Registered successfully!`); // ✅ toast
 
-    navigate("/");
+    navigate("/slateai");
   };
 
   return (

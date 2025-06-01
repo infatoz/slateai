@@ -11,6 +11,7 @@ import EditProfile from "./profile/EditProfile";
 import Profile from "./profile/Profile";
 import { Toaster } from "react-hot-toast";
 import ForgotPassword from "./pages/ForgotPassword";
+import HomePage from "./pages/HomePage";
 import Canvas from "./pages/Canvas";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -18,12 +19,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
+        <Route path="/" element ={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/canvas" element={<Canvas />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
-          path="/"
+          path="/slateai"
           element={
             <ProtectedRoute>
               {/* <App /> */}
