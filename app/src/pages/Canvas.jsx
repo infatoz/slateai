@@ -74,6 +74,7 @@ const handleChange = (elements, appState) => {
 
   console.log("Updated Drawing Data:", updatedData);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+
 };
 
   return (

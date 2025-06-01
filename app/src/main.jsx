@@ -7,12 +7,14 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import "./index.css"; // Include Tailwind here
 import Subscribe from "./pages/Subscribe";
+import Project from "./pages/Project";
 import EditProfile from "./profile/EditProfile";
 import Profile from "./profile/Profile";
 import { Toaster } from "react-hot-toast";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import Canvas from "./pages/Canvas";
+import { ThemeProvider } from "./context/ThemeContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     <ThemeProvider>
