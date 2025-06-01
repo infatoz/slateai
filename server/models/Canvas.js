@@ -8,7 +8,10 @@ const canvasSchema = new mongoose.Schema(
     },
     description: String,
     image: String, // Base64 or preview SVG image
-    excalidrawData: Object, // Full canvas state
+    excalidrawData:{
+      type: Object,
+      default: {}, // Default to empty object if no data// Excalidraw JSON data
+    }, // Full canvas state
     isPublic: {
       type: Boolean,
       default: false,
