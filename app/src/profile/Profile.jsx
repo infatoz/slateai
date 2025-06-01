@@ -32,7 +32,7 @@ export default function Profile() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen bg-gray-50">
+    <div className="flex h-screen w-screen bg-gray-50 ">
       <Sidebar profileName={profile.fullName} />
       <div className="flex flex-col flex-1">
         <Topbar

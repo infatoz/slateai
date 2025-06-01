@@ -40,7 +40,7 @@ export default function Register() {
     loginUser(values); // Save user data (replace with your backend logic)
     toast.success(`Registered successfully!`); // ✅ toast
 
-    navigate("/slateai");
+    navigate("/login");
   };
 
   return (

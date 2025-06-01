@@ -15,23 +15,25 @@ import HomePage from "./pages/HomePage";
 import Canvas from "./pages/Canvas";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
+    <ThemeProvider>
   <React.StrictMode>
+
     <BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
-        <Route path="/" element ={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/canvas" element={<Canvas />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
-          path="/slateai"
+          path="/slateai/:id"
           element={
             <ProtectedRoute>
               {/* <App /> */}
             </ProtectedRoute>
           }
-        />
+          />
         <Route
           path="/profile"
           element={
@@ -39,7 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Profile />
             </ProtectedRoute>
           }
-        />
+          />
         <Route
           path="/edit-profile"
           element={
@@ -47,7 +49,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <EditProfile />
             </ProtectedRoute>
           }
-        />
+          />
         <Route
           path="/subscribe"
           element={
@@ -55,8 +57,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Subscribe />
             </ProtectedRoute>
           }
-        />
+          />
+        <Route
+          path="/project"
+          element={
+            <ProtectedRoute>
+              <Project />
+            </ProtectedRoute>
+          }
+          />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
+          </ThemeProvider>
 );

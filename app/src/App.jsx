@@ -8,53 +8,27 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 
-const STORAGE_KEY = "excalidraw-data";
-
-
 function App() {
-  const [initialData, setInitialData] = useState(null);
   const excalidrawRef = useRef(null);
 
-  // States for profile info
+  // Profile states
   const [profileName, setProfileName] = useState("");
   const [profilePic, setProfilePic] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
 
-  // useEffect(() => {
-  //   // Load all profile info from localStorage dynamically
-  //   const storedName = localStorage.getItem("profileName") || "";
-  //   const storedPic = localStorage.getItem("profilePic") || "";
-  //   const storedEmail = localStorage.getItem("profileEmail") || "";
+  // Tabs state
+  const [tabs, setTabs] = useState(() => {
+    const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [
+      { id: "tab-1", name: "Untitled", storageKey: "excalidraw-tab-1" },
+    ];
+    return savedTabs;
+  });
 
-  //   setProfileName(storedName);
-  //   setProfilePic(storedPic);
-  //   setProfileEmail(storedEmail);
+  const [activeTabId, setActiveTabId] = useState(tabs[0].id);
+  const [initialData, setInitialData] = useState(null);
 
-  //   // Load drawing data
-  //   const savedData = localStorage.getItem(STORAGE_KEY);
-  //   if (savedData) {
-  //     try {
-  //       const parsed = JSON.parse(savedData);
-  //       if (
-  //         parsed.appState &&
-  //         parsed.appState.collaborators &&
-  //         !(parsed.appState.collaborators instanceof Map)
-  //       ) {
-  //         parsed.appState.collaborators = new Map(
-  //           Object.entries(parsed.appState.collaborators)
-  //         );
-  //       }
-  //       setInitialData(parsed);
-  //     } catch (e) {
-  //       console.error("Invalid saved data. Using fallback.");
-  //       setInitialData(data[0]);
-  //     }
-  //   } else {
-  //     setInitialData(data[0]);
-  //   }
-  // }, []);
+  // Load user profile and current tab data
   useEffect(() => {
-    // Get the whole authUser object as JSON string from localStorage
     const storedAuthUser = localStorage.getItem("authUser");
     if (storedAuthUser) {
       try {
@@ -65,15 +39,10 @@ function App() {
       } catch (err) {
         console.error("Failed to parse authUser from localStorage", err);
       }
-    } else {
-      // fallback if nothing in localStorage
-      setProfileName("");
-      setProfilePic("");
-      setProfileEmail("");
     }
 
-    // Load drawing data as before
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const currentTab = tabs.find((t) => t.id === activeTabId);
+    const savedData = localStorage.getItem(currentTab.storageKey);
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
@@ -94,8 +63,9 @@ function App() {
     } else {
       setInitialData(data[0]);
     }
-  }, []);
-  
+  }, [activeTabId]);
+
+  // Handle drawing changes and save to current tab's localStorage key
   const handleChange = (elements, appState) => {
     const collaborators =
       appState.collaborators instanceof Map
@@ -104,33 +74,78 @@ function App() {
 
     const updatedData = {
       elements,
-      appState: {
-        ...appState,
-        collaborators,
-      },
+      appState: { ...appState, collaborators },
       scrollToContent: true,
     };
 
-    console.log("Updated Drawing Data:", updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    const currentTab = tabs.find((t) => t.id === activeTabId);
+    if (currentTab) {
+      localStorage.setItem(currentTab.storageKey, JSON.stringify(updatedData));
+    }
+  };
+
+  // Switch between tabs
+  const switchTab = (tabId) => {
+    setActiveTabId(tabId);
+  };
+
+  // Create new drawing tab
+  const createNewTab = () => {
+    const newId = `tab-${Date.now()}`;
+    const newTab = {
+      id: newId,
+      name: `Untitled ${tabs.length + 1}`,
+      storageKey: `excalidraw-${newId}`,
+    };
+
+    const updatedTabs = [...tabs, newTab];
+    setTabs(updatedTabs);
+    setActiveTabId(newId);
+    localStorage.setItem("tabs", JSON.stringify(updatedTabs));
+
+    // Create empty canvas for the new tab
+    localStorage.setItem(
+      newTab.storageKey,
+      JSON.stringify({ elements: [], appState: {}, scrollToContent: true })
+    );
+  };
+  const closeTab = (tabId) => {
+    const updatedTabs = tabs.filter((tab) => tab.id !== tabId);
+    localStorage.setItem("tabs", JSON.stringify(updatedTabs));
+    localStorage.removeItem(`excalidraw-${tabId}`); // optional: clean up data
+
+    // If the closed tab is active, switch to another one
+    if (tabId === activeTabId && updatedTabs.length > 0) {
+      setActiveTabId(updatedTabs[0].id);
+    }
+
+    setTabs(updatedTabs);
   };
 
   return (
     <div className="flex h-screen w-screen bg-gray-50">
       <Sidebar profileName={profileName} />
       <div className="flex flex-col flex-1">
-        <Topbar profileName={profileName} profilePic={profilePic} />
+        <Topbar
+          profileName={profileName}
+          profilePic={profilePic}
+          tabs={tabs}
+          activeTabId={activeTabId}
+          switchTab={switchTab}
+          createNewTab={createNewTab}
+          closeTab={closeTab} // 👈 added
+        />
 
         <main className="flex-1 p-6 overflow-auto bg-white">
           {initialData && (
             <Excalidraw
+              key={activeTabId} // 👈 This forces remount when tab changes
               ref={excalidrawRef}
               initialData={initialData}
               onChange={handleChange}
-              UIOptions={UIOptions}
+              // UIOptions={UIOptions}
             />
           )}
-
           <Outlet />
         </main>
       </div>
