@@ -14,7 +14,6 @@ import { Toaster } from "react-hot-toast";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import Canvas from "./pages/Canvas";
-import Project from "./pages/Project";
 import { ThemeProvider } from "./context/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 
