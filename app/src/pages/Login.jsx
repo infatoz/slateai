@@ -3,6 +3,7 @@ import * as Yup from "yup";
 import { loginUser, isAuthenticated } from "../auth/auth";
 import { useNavigate, Navigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,11 +26,39 @@ export default function Login() {
       .required("Password is required"),
   });
 
-  const handleSubmit = (values) => {
-    loginUser({ email: values.email });
-    toast.success("Login successful ✅");
-    navigate("/project");
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        values,
+        {
+          withCredentials: true, // important to send/receive cookies
+        }
+      );
+
+      // Example: Store tokens or user info however you want, e.g., in localStorage or context
+      // Here you can call your loginUser to save user data locally
+      loginUser(response.data.user);
+
+      toast.success("Login successful ✅");
+      navigate("/project");
+    } catch (error) {
+      console.error("Login error:", error.response?.data || error.message);
+
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -53,7 +82,7 @@ export default function Login() {
                   name="email"
                   type="email"
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black-500 focus:border-blaack-500 outline-none transition-all"
                 />
                 <ErrorMessage
                   name="email"
@@ -91,7 +120,7 @@ export default function Login() {
                 </label>
                 <a
                   href="/forgot-password"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                  className="text-sm text-black-600 hover:text-indigo-500"
                 >
                   Forgot password?
                 </a>
@@ -99,7 +128,7 @@ export default function Login() {
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors"
+                className="w-full bg-black hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg transition-colors"
               >
                 Sign In
               </button>
@@ -111,7 +140,7 @@ export default function Login() {
           Don't have an account?{" "}
           <a
             href="/register"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
+            className="text-black-600 hover:text-indigo-500 font-medium"
           >
             Sign up
           </a>

@@ -7,7 +7,7 @@ const Sidebar = ({ profileName }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: "Dashboard", path: "/slateai" },
+    { name: "Dashboard", path: "/dashboard" },
     { name: "Projects", path: "/project" },
     { name: "Subscriptions", path: "/subscribe" },
     { name: "Settings", path: "/settings" },
