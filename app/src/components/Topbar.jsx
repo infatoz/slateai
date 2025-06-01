@@ -1,11 +1,20 @@
 // src/components/Topbar.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../auth/auth";
+import { ThemeContext } from "../context/ThemeContext";
 
-const Topbar = ({ profileName, profilePic }) => {
+const Topbar = ({
+  profileName,
+  profilePic,
+  tabs = [], // ✅ default to an empty array
+  activeTabId,
+  switchTab,
+  createNewTab,
+  closeTab,
+}) => {
   const navigate = useNavigate();
-
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext); 
   const handleLogout = () => {
     logoutUser();
     localStorage.removeItem("profileName");
@@ -15,31 +24,53 @@ const Topbar = ({ profileName, profilePic }) => {
 
   return (
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+      <div className="flex space-x-2 overflow-x-auto">
+        {tabs.map((tab) => (
+          <div key={tab.id} className="relative flex items-center group">
+            <button
+              onClick={() => switchTab(tab.id)}
+              className={`px-3 py-1 rounded-t-md border flex items-center ${
+                activeTabId === tab.id
+                  ? "bg-blue-100 border-blue-400"
+                  : "bg-gray-100 border-gray-300"
+              }`}
+            >
+              {tab.name}
+            </button>
+
+            {/* Close X Button */}
+            <button
+              onClick={() => closeTab(tab.id)}
+              className="absolute -right-2 -top-1 text-gray-500 hover:text-red-600 text-xs bg-white border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center group-hover:visible invisible"
+              title="Close Tab"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+
+        <button
+          onClick={createNewTab}
+          className="px-3 py-1 rounded-t-md border bg-green-100 hover:bg-green-200 border-green-400"
+        >
+          {/* ＋ */}
+        </button>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold text-gray-900">
           Welcome Back, {profileName}!
         </h2>
       </div>
       <div className="flex items-center space-x-4 relative">
+      
         <button
-          className="text-gray-600 hover:text-gray-900 focus:outline-none"
-          aria-label="Notifications"
+          onClick={toggleTheme}
+          className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+          title="Toggle Dark Mode"
         >
-          {/* Dummy bell icon */}
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            viewBox="0 0 24 24"
-          >
-            <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 01-3.46 0" />
-          </svg>
+          {isDarkMode ? "☀️" : "🌙"}
         </button>
-
         {/* Profile dropdown on hover */}
         <div className="relative group">
           <img
