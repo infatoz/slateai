@@ -1,47 +1,63 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { loginUser } from "../auth/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Navigate } from "react-router-dom";
 import { isAuthenticated } from "../auth/auth";
+import axios from "axios";
+
 export default function Register() {
   const navigate = useNavigate();
+
   if (isAuthenticated()) {
     return <Navigate to="/slateai" />;
   }
+
   const initialValues = {
     fullName: "",
     email: "",
-    phone: "",
-    role: "student",
-    profileImage: "",
+    phoneNo: "", // rename from phone to phoneNo
     password: "",
-    confirmPassword: "",
   };
+  
 
   const validationSchema = Yup.object({
     fullName: Yup.string().required("Full Name is required"),
     email: Yup.string().email("Invalid email").required("Email is required"),
-    phone: Yup.string()
+    phoneNo: Yup.string()
       .matches(/^[0-9]{10}$/, "Phone must be 10 digits")
       .required("Phone is required"),
-    role: Yup.string().required("Role is required"),
-    profileImage: Yup.string().url("Must be a valid URL"),
+
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
       .required("Password is required"),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password")], "Passwords must match")
-      .required("Confirm Password is required"),
   });
 
-  const handleSubmit = (values) => {
-    loginUser(values); // Save user data (replace with your backend logic)
-    toast.success(`Registered successfully!`); // ✅ toast
-
-    navigate("/login");
+  const handleSubmit = async (values, { setSubmitting }) => {
+    console.log("Register data sent:", values);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/register",
+        values
+      );
+      toast.success("Registered successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Register error:", error.response?.data || error.message);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Something went wrong!");
+      }
+      setSubmitting(false);
+    }
   };
+  
+  
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
@@ -85,44 +101,14 @@ export default function Register() {
 
               <div>
                 <Field
-                  name="phone"
+                  name="phoneNo"
                   type="tel"
                   placeholder="Phone Number"
                   className="w-full px-4 py-2 border rounded"
                 />
+
                 <ErrorMessage
                   name="phone"
-                  component="div"
-                  className="text-red-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <Field
-                  name="role"
-                  as="select"
-                  className="w-full px-4 py-2 border rounded"
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="working">Working Professional</option>
-                </Field>
-                <ErrorMessage
-                  name="role"
-                  component="div"
-                  className="text-red-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <Field
-                  name="profileImage"
-                  type="url"
-                  placeholder="Profile Image URL (optional)"
-                  className="w-full px-4 py-2 border rounded"
-                />
-                <ErrorMessage
-                  name="profileImage"
                   component="div"
                   className="text-red-500 text-sm"
                 />
@@ -137,20 +123,6 @@ export default function Register() {
                 />
                 <ErrorMessage
                   name="password"
-                  component="div"
-                  className="text-red-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <Field
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-2 border rounded"
-                />
-                <ErrorMessage
-                  name="confirmPassword"
                   component="div"
                   className="text-red-500 text-sm"
                 />

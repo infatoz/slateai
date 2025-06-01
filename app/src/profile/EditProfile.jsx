@@ -10,11 +10,8 @@ export default function EditProfile() {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "",
     phone: "",
-    bio: "",
     profileImage: "",
-    role: "",
   });
 
   // Profile info for sidebar and topbar
@@ -26,14 +23,11 @@ export default function EditProfile() {
     if (storedUser) {
       setFormData({
         fullName: storedUser.fullName || "",
-        email: storedUser.email || "",
-        phone: storedUser.phone || "",
-        bio: storedUser.bio || "",
-        profileImage: storedUser.profileImage || "",
-        role: storedUser.role || "",
+        phone: storedUser.phoneNo || "", // assuming backend uses phoneNo key
+        profileImage: storedUser.avatar || "", // backend uses avatar key
       });
       setProfileName(storedUser.fullName || "");
-      setProfilePic(storedUser.profileImage || "");
+      setProfilePic(storedUser.avatar || "");
     }
   }, []);
 
@@ -45,11 +39,39 @@ export default function EditProfile() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    localStorage.setItem("authUser", JSON.stringify(formData));
-    toast.success("Profile updated successfully!");
-    setTimeout(() => navigate("/profile"), 1500);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/profile", {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          phoneNo: formData.phone,
+          avatar: formData.profileImage,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
+      const data = await response.json();
+
+      localStorage.setItem("authUser", JSON.stringify(data.user));
+      setProfileName(data.user.fullName || "");
+      setProfilePic(data.user.avatar || "");
+
+      toast.success("Profile updated successfully!");
+      setTimeout(() => navigate("/profile"), 1500);
+    } catch (err) {
+      toast.error(`Update failed: ${err.message}`);
+    }
   };
 
   return (
@@ -83,6 +105,7 @@ export default function EditProfile() {
               value={formData.profileImage}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded"
+              required
             />
 
             <input
@@ -96,43 +119,14 @@ export default function EditProfile() {
             />
 
             <input
-              type="email"
-              name="email"
-              value={formData.email}
-              readOnly
-              className="w-full px-4 py-2 border rounded bg-gray-100"
-            />
-
-            <input
               type="tel"
               name="phone"
               placeholder="Phone Number"
               value={formData.phone}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded"
-            />
-
-            <textarea
-              name="bio"
-              placeholder="Short Bio"
-              value={formData.bio}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded"
-            />
-
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded"
               required
-            >
-              <option value="" disabled>
-                Select Role
-              </option>
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-            </select>
+            />
 
             <button
               type="submit"
