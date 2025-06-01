@@ -2,7 +2,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import App from "./App";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./pages/ProtectedRoute";
@@ -12,6 +11,7 @@ import EditProfile from "./profile/EditProfile";
 import Profile from "./profile/Profile";
 import { Toaster } from "react-hot-toast";
 import ForgotPassword from "./pages/ForgotPassword";
+import Canvas from "./pages/Canvas";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -20,12 +20,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/canvas" element={<Canvas />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <App />
+              {/* <App /> */}
             </ProtectedRoute>
           }
         />
