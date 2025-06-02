@@ -54,7 +54,7 @@ export default function Profile() {
                 <strong>Phone:</strong> {profile.phoneNo || "Not provided"}
               </p>
               <p>
-                <strong>Role:</strong> {profile.role || "Not specified"}
+                {/* <strong>Role:</strong> {profile.role || "Not specified"} */}
               </p>
             </div>
 

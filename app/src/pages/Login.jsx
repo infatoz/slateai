@@ -9,7 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   if (isAuthenticated()) {
-    return <Navigate to="/slateai" />;
+    return <Navigate to="/project" />;
   }
 
   const initialValues = {
@@ -32,12 +32,16 @@ export default function Login() {
         "http://localhost:5000/api/auth/login",
         values,
         {
-          withCredentials: true, // important to send/receive cookies
+          withCredentials: true,
         }
       );
 
-      // Example: Store tokens or user info however you want, e.g., in localStorage or context
-      // Here you can call your loginUser to save user data locally
+      // Save tokens & user info to localStorage
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      // Call your existing loginUser if it does anything else
       loginUser(response.data.user);
 
       toast.success("Login successful ✅");
@@ -59,7 +63,6 @@ export default function Login() {
     }
   };
   
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">

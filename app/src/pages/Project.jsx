@@ -19,6 +19,11 @@ export default function Project() {
 
   const [profileName, setProfileName] = useState("");
   const [profilePic, setProfilePic] = useState("");
+  const [description, setDescription] = useState("");
+
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+  const firstLoadRef = useRef(true);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,9 +33,9 @@ export default function Project() {
 
   // Fetch profile info on mount
   useEffect(() => {
-    const storedAuthUser = localStorage.getItem("authUser");
-    if (storedAuthUser) {
-      try {
+    try {
+      const storedAuthUser = localStorage.getItem("authUser");
+      if (storedAuthUser) {
         const user = JSON.parse(storedAuthUser);
         setProfileName(user.fullName || "User");
         setProfilePic(user.profileImage || "");
@@ -149,6 +154,7 @@ export default function Project() {
     }
   };
 
+  // Navigate on project card click except dropdown
   const handleCardClick = (e, id) => {
     if (e.target.closest(".dropdown-trigger") || e.target.closest(".dropdown-menu")) return;
     navigate(`/slateai/${id}`);
@@ -399,12 +405,12 @@ export default function Project() {
                   placeholder="New Canvas Title"
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full mb-5 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="New project name"
                 />
                 {/* If you want to edit description and visibility here, add more fields */}
                 <div className="flex justify-end gap-4">
                   <button
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 transition font-medium"
                     onClick={() => setShowRenameModal(false)}
                     disabled={isLoading}
                   >
