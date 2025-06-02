@@ -19,23 +19,23 @@ exports.createCanvas = async (req, res) => {
   }
 };
 
-exports.getCanvasById = async (req, res) => {
-  try {
-    const canvas = await Canvas.findById(req.params.id)
-      .populate("owner", "fullName email")
-      .populate("collaborators", "fullName email");
+  exports.getCanvasById = async (req, res) => {
+    try {
+      const canvas = await Canvas.findById(req.params.id)
+        .populate("owner", "fullName email")
+        .populate("collaborators", "fullName email");
 
-    if (!canvas) return res.status(404).json({ message: "Canvas not found" });
+      if (!canvas) return res.status(404).json({ message: "Canvas not found" });
 
-    if (!canvas.isPublic && ![canvas.owner._id.toString(), ...canvas.collaborators.map(c => c._id.toString())].includes(req.user.id)) {
-      return res.status(403).json({ message: "Access denied" });
+      if (!canvas.isPublic && ![canvas.owner._id.toString(), ...canvas.collaborators.map(c => c._id.toString())].includes(req.user.id)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({ canvas });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch canvas" });
     }
-
-    res.json({ canvas });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch canvas" });
-  }
-};
+  };
 
 exports.updateCanvas = async (req, res) => {
   const { title, description, isPublic, image, excalidrawData } = req.body;

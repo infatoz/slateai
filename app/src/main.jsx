@@ -16,6 +16,8 @@ import HomePage from "./pages/HomePage";
 import Canvas from "./pages/Canvas";
 import { ThemeProvider } from "./context/ThemeContext";
 import Dashboard from "./pages/Dashboard";
+import App from "./App";
+import SlateCanvas from "./components/SlateCanvas";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <ThemeProvider>
@@ -30,7 +32,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/slateai/:id"
-            element={<ProtectedRoute>{/* <App /> */}</ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                {" "}
+                <App />{" "}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/profile"
@@ -69,6 +76,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/slate-canvas"
+            element={
+              <ProtectedRoute>
+                <SlateCanvas />
               </ProtectedRoute>
             }
           />

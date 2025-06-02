@@ -14,29 +14,82 @@ export default function Project() {
   const [renameValue, setRenameValue] = useState("");
   const [profileName, setProfileName] = useState("");
   const [profilePic, setProfilePic] = useState("");
+  const [description, setDescription] = useState("");
 
-  useEffect(() => {
-    const storedAuthUser = localStorage.getItem("authUser");
-    if (storedAuthUser) {
-      try {
-        const user = JSON.parse(storedAuthUser);
-        setProfileName(user.fullName || "");
-        setProfilePic(user.profileImage || "");
-      } catch (err) {
-        console.error("Failed to parse authUser from localStorage", err);
-      }
-    }
-  });
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-
   const firstLoadRef = useRef(true);
 
+  // Load profile info on mount
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("projects")) || [];
-    setProjects(saved);
+    try {
+      const storedAuthUser = localStorage.getItem("authUser");
+      if (storedAuthUser) {
+        const user = JSON.parse(storedAuthUser);
+        setProfileName(user.fullName || "");
+        setProfilePic(user.avatar || "");
+      }
+    } catch (err) {
+      console.error("Failed to parse authUser:", err);
+    }
   }, []);
 
+  // Helper to get token robustly
+  const getToken = () => {
+    try {
+      const storedAuthUser = localStorage.getItem("authUser");
+      if (storedAuthUser) {
+        const user = JSON.parse(storedAuthUser);
+        if (user.accessToken) return user.accessToken;
+        if (user.token) return user.token;
+      }
+      const directToken = localStorage.getItem("accessToken");
+      if (directToken) return directToken;
+    } catch (err) {
+      console.error("Error retrieving token:", err);
+    }
+    return null;
+  };
+
+  // Fetch projects once on mount
+  useEffect(() => {
+    const localProjects = localStorage.getItem("projects");
+    if (localProjects) {
+      setProjects(JSON.parse(localProjects));
+    } else {
+      // fallback to backend fetch
+      async function fetchProjects() {
+        const token = getToken();
+        try {
+          const res = await fetch("http://localhost:5000/api/canvas/my", {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Unauthorized");
+
+          const formatted = data.canvases.map((canvas) => ({
+            id: canvas._id,
+            name: canvas.title,
+            description: canvas.description || "",
+            visibility: canvas.isPublic ? "public" : "private",
+            createdAt: canvas.createdAt || new Date().toISOString(),
+          }));
+
+          setProjects(formatted);
+          localStorage.setItem("projects", JSON.stringify(formatted));
+        } catch (err) {
+          console.error("Failed to fetch projects:", err);
+        }
+      }
+      fetchProjects();
+    }
+  }, []);
+  
+
+  // Update localStorage on projects change (skip first load)
   useEffect(() => {
     if (firstLoadRef.current) {
       firstLoadRef.current = false;
@@ -45,6 +98,7 @@ export default function Project() {
     localStorage.setItem("projects", JSON.stringify(projects));
   }, [projects]);
 
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -55,47 +109,73 @@ export default function Project() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-//   const handleCreate = () => {
-//     if (!name.trim()) return;
-//     const newProject = {
-//       id: Date.now(),
-//       name: name.trim(),
-//       visibility,
-//     };
-//     const updatedProjects = [...projects, newProject];
-//     localStorage.setItem("projects", JSON.stringify(updatedProjects));
-//     setProjects(updatedProjects);
-//     setShowModal(false);
-//     setName("");
-//     setVisibility("public");
-//   };
-const handleCreate = () => {
-  if (!name.trim()) return;
-  const newProject = {
-    id: Date.now(),
-    name: name.trim(),
-    visibility,
-    createdAt: new Date().toISOString(), // ✅ Add this
-  };
-  const updatedProjects = [newProject, ...projects];
+  // Create new project
+  const handleCreate = async () => {
+    if (!name.trim()) return;
 
-  localStorage.setItem("projects", JSON.stringify(updatedProjects));
-  setProjects(updatedProjects);
-  setShowModal(false);
-  setName("");
-  setVisibility("public");
-};
-  
+    const token = getToken();
+
+    let newProject = null;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/canvas/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          title: name.trim(),
+          description: description.trim(),
+          isPublic: visibility === "public",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create canvas");
+
+      newProject = {
+        id: data.canvas._id,
+        name: data.canvas.title,
+        description: data.canvas.description || "",
+        visibility: data.canvas.isPublic ? "public" : "private",
+        createdAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      console.warn("Backend failed, storing locally:", err.message);
+
+      newProject = {
+        id: `local-${Date.now()}`,
+        name: name.trim(),
+        description: description.trim(),
+        visibility,
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    const updatedProjects = [newProject, ...projects];
+    setProjects(updatedProjects);
+    localStorage.setItem("projects", JSON.stringify(updatedProjects));
+
+    setShowModal(false);
+    setName("");
+    setDescription("");
+    setVisibility("public");
+  };
+
+  // Delete project
   const handleDelete = (id) => {
     const updated = projects.filter((p) => p.id !== id);
-    localStorage.setItem("projects", JSON.stringify(updated));
     setProjects(updated);
+    localStorage.setItem("projects", JSON.stringify(updated));
   };
 
+  // Navigate on project card click except dropdown
   const handleCardClick = (e, id) => {
     if (e.target.closest(".dropdown")) return;
     navigate(`/slateai/${id}`);
   };
+
+  // Rename project
   const handleRename = () => {
     if (!renameValue.trim()) return;
 
@@ -109,20 +189,15 @@ const handleCreate = () => {
     setRenameId(null);
     setRenameValue("");
   };
-  
-  // --- Wrap with Sidebar and Topbar here ---
+
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* or pass a real name if you have it */}
       <Sidebar profileName={profileName} />
 
       <div className="flex flex-col flex-1">
-        {/* <Topbar profileName="User" /> */}
         <Topbar profileName={profileName} profilePic={profilePic} />
 
         <main className="flex-1 p-8 overflow-auto">
-          {/* === Original project JSX content below === */}
-
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800">Your Projects</h1>
             <button
@@ -148,6 +223,12 @@ const handleCreate = () => {
                   <h2 className="text-lg font-semibold text-gray-900 truncate">
                     {project.name}
                   </h2>
+                  {project.description && (
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      {project.description}
+                    </p>
+                  )}
+
                   <p className="text-xs text-gray-500 uppercase tracking-wide">
                     {project.visibility}
                   </p>
@@ -204,7 +285,7 @@ const handleCreate = () => {
                           handleDelete(project.id);
                           setDropdownId(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 text-sm font-medium"
+                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 text-sm font-medium"
                       >
                         Delete
                       </button>
@@ -215,54 +296,49 @@ const handleCreate = () => {
             ))}
           </div>
 
+          {/* Create Project Modal */}
           {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-              <div className="bg-white w-full max-w-md rounded-2xl p-6 space-y-5 shadow-xl">
-                <h2 className="text-2xl font-bold text-center text-gray-800">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white rounded-lg p-6 w-96 relative">
+                <h2 className="text-xl font-semibold mb-4">
                   Create New Project
                 </h2>
 
                 <input
                   type="text"
-                  placeholder="Project Name"
+                  placeholder="Project name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full mb-3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
-                <div className="flex gap-6 justify-center">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="public"
-                      checked={visibility === "public"}
-                      onChange={() => setVisibility("public")}
-                    />
-                    Public
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="private"
-                      checked={visibility === "private"}
-                      onChange={() => setVisibility("private")}
-                    />
-                    Private
-                  </label>
-                </div>
+                <textarea
+                  placeholder="Description (optional)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full mb-3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
 
-                <div className="flex justify-end gap-4">
+                <select
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value)}
+                  className="w-full mb-5 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+
+                <div className="flex justify-end space-x-4">
                   <button
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 transition font-medium"
                     onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition"
                   >
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
                     onClick={handleCreate}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
                   >
                     Create
                   </button>
@@ -270,33 +346,31 @@ const handleCreate = () => {
               </div>
             </div>
           )}
-          {showRenameModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-              <div className="bg-white w-full max-w-md rounded-2xl p-6 space-y-5 shadow-xl">
-                <h2 className="text-2xl font-bold text-center text-gray-800">
-                  Rename Project
-                </h2>
 
+          {/* Rename Modal */}
+          {showRenameModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white rounded-lg p-6 w-80 relative">
+                <h2 className="text-xl font-semibold mb-4">Rename Project</h2>
                 <input
                   type="text"
-                  placeholder="New Project Name"
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full mb-5 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="New project name"
                 />
-
-                <div className="flex justify-end gap-4">
+                <div className="flex justify-end space-x-4">
                   <button
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 transition font-medium"
                     onClick={() => setShowRenameModal(false)}
+                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition"
                   >
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
                     onClick={handleRename}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
                   >
-                    Save
+                    Rename
                   </button>
                 </div>
               </div>
