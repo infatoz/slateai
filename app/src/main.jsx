@@ -31,18 +31,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/canvas" element={<Canvas />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
-<<<<<<< HEAD
-            path="/slate/:id"
+            path="/slate-canvas"
             element={<ProtectedRoute>{/* <App /> */}</ProtectedRoute>}
-=======
-            path="/slateai/:id"
-            element={
-              <ProtectedRoute>
-                {" "}
-                <App />{" "}
-              </ProtectedRoute>
-            }
->>>>>>> ce23d2997419b0861f953f6e599096cc8f32b74a
           />
           <Route
             path="/profile"
@@ -85,10 +75,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             }
           />
           <Route
-            path="/slate-canvas"
+            path="/slate/:canvasId"
             element={
               <ProtectedRoute>
-                <SlateCanvas />
+                {/* <SlateCanvas /> */}
+                <App/>
               </ProtectedRoute>
             }
           />
