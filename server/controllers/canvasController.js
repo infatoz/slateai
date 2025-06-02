@@ -126,21 +126,46 @@ exports.updateCanvasDrawingData = async (req, res) => {
 
     const userId = req.user.id;
     const isOwner = canvas.owner.toString() === userId;
-    const isCollaborator = canvas.collaborators.includes(userId);
+    const isCollaborator = canvas.collaborators.some(
+      id => id.toString() === userId
+    );
 
     if (!isOwner && !isCollaborator) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    canvas.elements = elements;
-    canvas.appState = appState || canvas.appState;
-    if (image) canvas.image = image; // Optional base64 preview image
+    canvas.excalidrawData = {
+      elements,
+      appState: appState || canvas.excalidrawData.appState,
+    };
+    if (image) canvas.image = image;
 
     await canvas.save();
 
-    res.json({ message: "Canvas drawing updated successfully", canvasId: canvas._id });
+    res.json({ message: "Canvas drawing updated", canvasId: canvas._id });
   } catch (err) {
-    console.error("Error updating canvas drawing:", err);
+    console.error("Update Error:", err);
     res.status(500).json({ message: "Server error while updating canvas" });
+  }
+};
+
+exports.getMyCanvases = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const canvases = await Canvas.find({
+      $or: [
+        { owner: userId },
+        { collaborators: userId }
+      ]
+    })
+      .populate("owner", "fullName email")
+      .populate("collaborators", "fullName email")
+      .sort({ updatedAt: -1 });
+
+    res.json({ canvases });
+  } catch (err) {
+    console.error("Error fetching user's canvases:", err);
+    res.status(500).json({ message: "Server error while fetching canvases" });
   }
 };
