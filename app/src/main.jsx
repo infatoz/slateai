@@ -29,7 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/canvas" element={<Canvas />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
-            path="/slateai/:id"
+            path="/slate/:id"
             element={<ProtectedRoute>{/* <App /> */}</ProtectedRoute>}
           />
           <Route
