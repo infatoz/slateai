@@ -28,7 +28,7 @@ const canvasSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true,minimize: false }
 );
 
 module.exports = mongoose.model("Canvas", canvasSchema);
